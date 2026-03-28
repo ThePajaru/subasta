@@ -487,6 +487,63 @@ async function scrapeMarketPrices(car) {
 }
 
 // ============================================================
+// BCA AUCTION FEES (Tarifas de Servicios v. 1 junio 2025)
+// ============================================================
+const BCA_FEE_TABLE = [
+    { from: 0,     to: 249.99,   fee: 102 },
+    { from: 250,   to: 499.99,   fee: 135 },
+    { from: 500,   to: 749.99,   fee: 181 },
+    { from: 750,   to: 999.99,   fee: 198 },
+    { from: 1000,  to: 1249.99,  fee: 215 },
+    { from: 1250,  to: 1499.99,  fee: 237 },
+    { from: 1500,  to: 1749.99,  fee: 257 },
+    { from: 1750,  to: 1999.99,  fee: 279 },
+    { from: 2000,  to: 2499.99,  fee: 296 },
+    { from: 2500,  to: 2999.99,  fee: 314 },
+    { from: 3000,  to: 3499.99,  fee: 337 },
+    { from: 3500,  to: 3999.99,  fee: 340 },
+    { from: 4000,  to: 4499.99,  fee: 343 },
+    { from: 4500,  to: 4999.99,  fee: 347 },
+    { from: 5000,  to: 5499.99,  fee: 350 },
+    { from: 5500,  to: 5999.99,  fee: 353 },
+    { from: 6000,  to: 6499.99,  fee: 357 },
+    { from: 6500,  to: 6999.99,  fee: 361 },
+    { from: 7000,  to: 7499.99,  fee: 364 },
+    { from: 7500,  to: 7999.99,  fee: 367 },
+    { from: 8000,  to: 8499.99,  fee: 370 },
+    { from: 8500,  to: 8999.99,  fee: 375 },
+    { from: 9000,  to: 9499.99,  fee: 378 },
+    { from: 9500,  to: 9999.99,  fee: 381 },
+    { from: 10000, to: 10499.99, fee: 384 },
+    { from: 10500, to: 10999.99, fee: 388 },
+    { from: 11000, to: 11499.99, fee: 392 },
+    { from: 11500, to: 11999.99, fee: 395 },
+    { from: 12000, to: 12999.99, fee: 398 },
+    { from: 13000, to: 13999.99, fee: 401 },
+    { from: 14000, to: 14999.99, fee: 405 },
+    { from: 15000, to: 15999.99, fee: 409 },
+    { from: 16000, to: 16999.99, fee: 434 },
+    { from: 17000, to: 17999.99, fee: 459 },
+    { from: 18000, to: 18999.99, fee: 484 },
+    { from: 19000, to: 19999.99, fee: 509 },
+];
+
+// Tasa de adquisición + IVA 21%
+// Para >= 20.000€: 2,5% del precio de adjudicación + IVA
+function calculateBCAAcquisitionFee(bidPrice) {
+    if (bidPrice <= 0) return 0;
+    if (bidPrice >= 20000) return Math.round(bidPrice * 0.025 * 1.21);
+    const entry = BCA_FEE_TABLE.find(e => bidPrice >= e.from && bidPrice <= e.to);
+    const feeExcl = entry ? entry.fee : BCA_FEE_TABLE[BCA_FEE_TABLE.length - 1].fee;
+    return Math.round(feeExcl * 1.21);
+}
+
+// Gestión y Transferencia BCA:
+//   - Tasas de tráfico (sin IVA): 55,70€
+//   - Honorarios de gestión (+IVA 21%): 69,77 * 1.21 = 84,42€
+const BCA_GESTION_FEE = Math.round(55.70 + 69.77 * 1.21); // ~140€
+
+// ============================================================
 // PRICE CALCULATOR
 // ============================================================
 function calculateMarketPrice(prices) {
@@ -541,29 +598,35 @@ function calculateMarketPrice(prices) {
 function calculateBuyPrice(marketPrice, damageLevel, targetMargin = 0.35) {
     if (!marketPrice) return { buyPrice: 0, estimatedProfit: 0 };
 
-    const damageCostEstimates = {
-        0: 0,
-        1: 200,
-        2: 500,
-        3: 1200,
-        4: 2500,
-        5: 4500,
-    };
-
-    const repairCost = damageCostEstimates[damageLevel] || damageCostEstimates[3];
-    const transferCost = 350;
+    const damageCostEstimates = { 0: 0, 1: 200, 2: 500, 3: 1200, 4: 2500, 5: 4500 };
+    const repairCost = damageCostEstimates[damageLevel] ?? damageCostEstimates[3];
     const preparationCost = 300;
-    const totalFixedCosts = transferCost + preparationCost + repairCost;
 
-    const sellingPrice = marketPrice;
-    const buyPrice = Math.round(sellingPrice / (1 + targetMargin) - totalFixedCosts);
-    const estimatedProfit = sellingPrice - buyPrice - totalFixedCosts;
-    const actualMargin = buyPrice > 0 ? ((estimatedProfit / buyPrice) * 100) : 0;
+    // Iterative solve: acquisition fee depends on bid price, so estimate once then refine
+    const fixedWithoutAcq = preparationCost + repairCost + BCA_GESTION_FEE;
+    const bidEst = Math.max(0, Math.round(marketPrice / (1 + targetMargin) - fixedWithoutAcq));
+    const acqFeeEst = calculateBCAAcquisitionFee(bidEst);
+
+    const totalFixed = fixedWithoutAcq + acqFeeEst;
+    const buyPrice = Math.max(0, Math.round(marketPrice / (1 + targetMargin) - totalFixed));
+
+    // Recalculate fee for the refined bid price (one more iteration for accuracy)
+    const bcaAcquisitionFee = calculateBCAAcquisitionFee(buyPrice);
+    const totalFixedCosts = preparationCost + repairCost + BCA_GESTION_FEE + bcaAcquisitionFee;
+    const buyPriceFinal = Math.max(0, Math.round(marketPrice / (1 + targetMargin) - totalFixedCosts));
+
+    const totalOutOfPocket = buyPriceFinal + bcaAcquisitionFee + BCA_GESTION_FEE;
+    const estimatedProfit = marketPrice - buyPriceFinal - totalFixedCosts;
+    const actualMargin = buyPriceFinal > 0 ? (estimatedProfit / buyPriceFinal) * 100 : 0;
 
     return {
-        buyPrice: Math.max(0, buyPrice),
-        sellingPrice,
+        buyPrice: buyPriceFinal,
+        sellingPrice: marketPrice,
         repairCost,
+        preparationCost,
+        bcaAcquisitionFee,
+        bcaGestionFee: BCA_GESTION_FEE,
+        totalOutOfPocket,
         totalFixedCosts,
         estimatedProfit: Math.round(estimatedProfit),
         actualMargin: Math.round(actualMargin * 10) / 10,

@@ -1,3 +1,82 @@
+// ============================================================
+// BCA FEE CALCULATION (mirrors server.js logic)
+// ============================================================
+const BCA_FEE_TABLE = [
+    { from: 0,     to: 249.99,   fee: 102 },
+    { from: 250,   to: 499.99,   fee: 135 },
+    { from: 500,   to: 749.99,   fee: 181 },
+    { from: 750,   to: 999.99,   fee: 198 },
+    { from: 1000,  to: 1249.99,  fee: 215 },
+    { from: 1250,  to: 1499.99,  fee: 237 },
+    { from: 1500,  to: 1749.99,  fee: 257 },
+    { from: 1750,  to: 1999.99,  fee: 279 },
+    { from: 2000,  to: 2499.99,  fee: 296 },
+    { from: 2500,  to: 2999.99,  fee: 314 },
+    { from: 3000,  to: 3499.99,  fee: 337 },
+    { from: 3500,  to: 3999.99,  fee: 340 },
+    { from: 4000,  to: 4499.99,  fee: 343 },
+    { from: 4500,  to: 4999.99,  fee: 347 },
+    { from: 5000,  to: 5499.99,  fee: 350 },
+    { from: 5500,  to: 5999.99,  fee: 353 },
+    { from: 6000,  to: 6499.99,  fee: 357 },
+    { from: 6500,  to: 6999.99,  fee: 361 },
+    { from: 7000,  to: 7499.99,  fee: 364 },
+    { from: 7500,  to: 7999.99,  fee: 367 },
+    { from: 8000,  to: 8499.99,  fee: 370 },
+    { from: 8500,  to: 8999.99,  fee: 375 },
+    { from: 9000,  to: 9499.99,  fee: 378 },
+    { from: 9500,  to: 9999.99,  fee: 381 },
+    { from: 10000, to: 10499.99, fee: 384 },
+    { from: 10500, to: 10999.99, fee: 388 },
+    { from: 11000, to: 11499.99, fee: 392 },
+    { from: 11500, to: 11999.99, fee: 395 },
+    { from: 12000, to: 12999.99, fee: 398 },
+    { from: 13000, to: 13999.99, fee: 401 },
+    { from: 14000, to: 14999.99, fee: 405 },
+    { from: 15000, to: 15999.99, fee: 409 },
+    { from: 16000, to: 16999.99, fee: 434 },
+    { from: 17000, to: 17999.99, fee: 459 },
+    { from: 18000, to: 18999.99, fee: 484 },
+    { from: 19000, to: 19999.99, fee: 509 },
+];
+const BCA_GESTION_FEE = Math.round(55.70 + 69.77 * 1.21); // ~140€
+
+function calcBCAAcquisitionFee(bidPrice) {
+    if (bidPrice <= 0) return 0;
+    if (bidPrice >= 20000) return Math.round(bidPrice * 0.025 * 1.21);
+    const entry = BCA_FEE_TABLE.find(e => bidPrice >= e.from && bidPrice <= e.to);
+    const feeExcl = entry ? entry.fee : BCA_FEE_TABLE[BCA_FEE_TABLE.length - 1].fee;
+    return Math.round(feeExcl * 1.21);
+}
+
+function recalcBuyPrice(marketPrice, repairCost, targetMargin) {
+    const preparationCost = 300;
+    const fixedWithoutAcq = preparationCost + repairCost + BCA_GESTION_FEE;
+    const bidEst = Math.max(0, Math.round(marketPrice / (1 + targetMargin) - fixedWithoutAcq));
+    const acqFeeEst = calcBCAAcquisitionFee(bidEst);
+    const totalFixed = fixedWithoutAcq + acqFeeEst;
+    const buyP = Math.max(0, Math.round(marketPrice / (1 + targetMargin) - totalFixed));
+    const bcaAcquisitionFee = calcBCAAcquisitionFee(buyP);
+    const totalFixedCosts = preparationCost + repairCost + BCA_GESTION_FEE + bcaAcquisitionFee;
+    const buyPriceFinal = Math.max(0, Math.round(marketPrice / (1 + targetMargin) - totalFixedCosts));
+    const totalOutOfPocket = buyPriceFinal + bcaAcquisitionFee + BCA_GESTION_FEE;
+    const estimatedProfit = marketPrice - buyPriceFinal - totalFixedCosts;
+    const actualMargin = buyPriceFinal > 0 ? (estimatedProfit / buyPriceFinal) * 100 : 0;
+    return {
+        buyPrice: buyPriceFinal,
+        sellingPrice: marketPrice,
+        repairCost,
+        preparationCost,
+        bcaAcquisitionFee,
+        bcaGestionFee: BCA_GESTION_FEE,
+        totalOutOfPocket,
+        totalFixedCosts,
+        estimatedProfit: Math.round(estimatedProfit),
+        actualMargin: Math.round(actualMargin * 10) / 10,
+        targetMargin: targetMargin * 100,
+    };
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     // DOM Elements
     const uploadZone = document.getElementById('uploadZone');
@@ -344,18 +423,8 @@ document.addEventListener('DOMContentLoaded', () => {
         
         carsData.forEach(car => {
             if (car.status === 'complete' && car.result && car.result.priceAnalysis.marketPrice > 0) {
-                // Simplified client-side recalc
-                const mrkPrice = car.result.priceAnalysis.marketPrice;
-                const repairCost = car.result.buyCalculation.repairCost || 1200; // default Moderate
-                const fixed = 350 + 300 + repairCost;
-                
-                const buyP = Math.round(mrkPrice / (1 + margin) - fixed);
-                const estProf = mrkPrice - buyP - fixed;
-                
-                car.result.buyCalculation.buyPrice = Math.max(0, buyP);
-                car.result.buyCalculation.estimatedProfit = Math.round(estProf);
-                car.result.buyCalculation.actualMargin = Math.round((estProf / buyP) * 1000) / 10;
-                car.result.buyCalculation.targetMargin = margin * 100;
+                const bc = recalcBuyPrice(car.result.priceAnalysis.marketPrice, car.result.buyCalculation.repairCost || 1200, margin);
+                Object.assign(car.result.buyCalculation, bc);
             }
         });
         
@@ -643,24 +712,45 @@ document.addEventListener('DOMContentLoaded', () => {
                             <span class="m-stat-label">Precio de Venta (Mercado)</span>
                             <span class="m-stat-val highlight-blue">${formatMoney(bc.sellingPrice)}</span>
                         </div>
+                        <div class="m-stat" style="margin-top:0.75rem; padding-top:0.75rem; border-top:1px solid var(--border-color)">
+                            <span class="m-stat-label" style="font-size:0.7rem; letter-spacing:0.05rem; color:var(--text-secondary)">COSTES ANTES DE VENDER</span>
+                        </div>
                         <div class="m-stat">
-                            <span class="m-stat-label">Coste Reparación Estimado</span>
+                            <span class="m-stat-label">Reparación estimada</span>
                             <span class="m-stat-val" style="color:var(--danger)">- ${formatMoney(bc.repairCost)}</span>
                         </div>
                         <div class="m-stat">
-                            <span class="m-stat-label">Otros Costes (Traspaso, ITV)</span>
-                            <span class="m-stat-val" style="color:var(--danger)">- ${formatMoney(bc.totalFixedCosts - bc.repairCost)}</span>
+                            <span class="m-stat-label">Preparación / ITV</span>
+                            <span class="m-stat-val" style="color:var(--danger)">- ${formatMoney(bc.preparationCost || 300)}</span>
                         </div>
-                        <div class="m-stat" style="margin-top:1rem">
+                        <div class="m-stat" style="margin-top:0.75rem; padding-top:0.75rem; border-top:1px solid var(--border-color)">
+                            <span class="m-stat-label" style="font-size:0.7rem; letter-spacing:0.05rem; color:var(--text-secondary)">TASAS BCA (al retirar el coche)</span>
+                        </div>
+                        <div class="m-stat">
+                            <span class="m-stat-label">Tasa de adquisición (+IVA)</span>
+                            <span class="m-stat-val" style="color:var(--danger)">- ${formatMoney(bc.bcaAcquisitionFee)}</span>
+                        </div>
+                        <div class="m-stat">
+                            <span class="m-stat-label">Gestión y Transferencia</span>
+                            <span class="m-stat-val" style="color:var(--danger)">- ${formatMoney(bc.bcaGestionFee || 140)}</span>
+                        </div>
+                        <div class="m-stat" style="background:rgba(239,68,68,0.08); padding:0.6rem 0.8rem; border-radius:6px; border:1px solid rgba(239,68,68,0.25); margin-top:0.25rem">
+                            <span class="m-stat-label" style="color:#f87171; font-weight:600">TOTAL A PAGAR A BCA</span>
+                            <span class="m-stat-val" style="color:#f87171; font-weight:700">${formatMoney(bc.totalOutOfPocket)}</span>
+                        </div>
+                        <div style="font-size:0.7rem; color:var(--text-secondary); margin-top:0.25rem; padding:0 0.2rem">
+                            Puja (${formatMoney(bc.buyPrice)}) + Tasa (${formatMoney(bc.bcaAcquisitionFee)}) + Gestión (${formatMoney(bc.bcaGestionFee || 140)})
+                        </div>
+                        <div class="m-stat" style="margin-top:1rem; padding-top:0.75rem; border-top:1px solid var(--border-color)">
                             <span class="m-stat-label">BENEFICIO NETO OBJETIVO</span>
                             <span class="m-stat-val" style="color:${bc.estimatedProfit > 0 ? 'var(--success)' : 'var(--danger)'}">${formatMoney(bc.estimatedProfit)}</span>
                         </div>
-                        <div class="m-stat" style="background:${bc.estimatedProfit > 0 ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)'}; padding:1rem; border-radius:8px; border:1px solid ${bc.estimatedProfit > 0 ? 'var(--success)' : 'var(--danger)'}; margin-top:1rem; align-items:center;">
+                        <div class="m-stat" style="background:${bc.estimatedProfit > 0 ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)'}; padding:1rem; border-radius:8px; border:1px solid ${bc.estimatedProfit > 0 ? 'var(--success)' : 'var(--danger)'}; margin-top:0.5rem; align-items:center;">
                             <span class="m-stat-label" style="color:white; font-size:1.1rem; font-weight:700">PRECIO DE PUJA MÁXIMO</span>
                             <span class="m-stat-val highlight-green" style="font-size:1.8rem; color:${bc.estimatedProfit > 0 ? 'var(--success)' : 'var(--danger)'}">${formatMoney(bc.buyPrice)}</span>
                         </div>
                     </div>
-                    
+
                     ${bc.buyPrice <= 0 ? '<p style="color:var(--danger); font-size:0.875rem; margin-top:1rem; background:var(--danger-bg); padding:0.5rem; border-radius:4px">⚠️ Este coche no es rentable con el margen deseado o los costes de reparación son muy altos.</p>' : ''}
                 </div>
             </div>

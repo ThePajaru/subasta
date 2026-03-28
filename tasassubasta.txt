@@ -1,0 +1,97 @@
+Información General
+* Empresa: BCA.
+* Descripción: N°1 Europeo en Remarketing de Vehículos.
+* Contacto: 949 263 000 | info.es@bca.com.
+* Avisos de seguridad: Las normas de seguridad y evacuación del centro se encuentran expuestas en la Recepción. La salida de emergencia mas se.
+* Documento: Tarifas de Servicios. V. 1 de junio de 2025.
+
+--------------------------------------------------
+
+Tarifas para el Comprador
+
+1. Tasa de adquisición
+Este concepto depende del precio del vehículo que encontrarás en la tabla.
+
+Precio Venta Desde (€) | Precio Venta Hasta (€) | Tasa (€)
+0 | 249,99 | 102
+250,00 | 499,99 | 135
+500,00 | 749,99 | 181
+750,00 | 999,99 | 198
+1.000,00 | 1.249,99 | 215
+1.250,00 | 1.499,99 | 237
+1.500,00 | 1.749,99 | 257
+1.750,00 | 1.999,99 | 279
+2.000,00 | 2.499,99 | 296
+2.500,00 | 2.999,99 | 314
+3.000,00 | 3.499,99 | 337
+3.500,00 | 3.999,99 | 340
+4.000,00 | 4.499,99 | 343
+4.500,00 | 4.999,99 | 347
+5.000,00 | 5.499,99 | 350
+5.500,00 | 5.999,99 | 353
+6.000,00 | 6.499,99 | 357
+6.500,00 | 6.999,99 | 361
+7.000,00 | 7.499,99 | 364
+7.500,00 | 7.999,99 | 367
+8.000,00 | 8.499,99 | 370
+8.500,00 | 8.999,99 | 375
+9.000,00 | 9.499,99 | 378
+9.500,00 | 9.999,99 | 381
+10.000,00 | 10.499,99 | 384
+10.500,00 | 10.999,99 | 388
+11.000,00 | 11.499,99 | 392
+11.500,00 | 11.999,99 | 395
+12.000,00 | 12.999,99 | 398
+13.000,00 | 13.999,99 | 401
+14.000,00 | 14.999,99 | 405
+15.000,00 | 15.999,99 | 409
+16.000,00 | 16.999,99 | 434
+17.000,00 | 17.999,99 | 459
+18.000,00 | 18.999,99 | 484
+19.000,00 | 19.999,99 | 509
+20.000,00 | 999.999,00 | 2,5%**
+
+2. Gestión y Transferencia
+* Tasas de tráfico (no se aplica IVA): 55,70 €.
+* Honorarios de gestión: 69,77 €.
+
+Otros cargos para el Comprador
+* Test salud de batería Aviloo***: Exclusiva para vehículos eléctricos 40 € + IVA.
+
+--------------------------------------------------
+
+Tarifas para el Vendedor
+
+1. Tasa de admisión: 40 €.
+
+2. Comisión vendedor (€)
+Precio Venta Desde | Precio Venta Hasta | Comisión Vendedor
+1 | 700 | 49
+701 | 1.500 | 79
+1.501 | 3.000 | 120
+3.001 | 6.000 | 162
+6.001 | 13.000 | 233
+13.001 | 999.999 | 290
+
+--------------------------------------------------
+
+Pagos e Ingresos en Cuenta
+
+* Plazos: Por favor, ten en cuenta que los coches adjudicados en firme (todas las ventas dentuvas), deberan abonarse dentro de las 48 horas siguientes a la subasta.
+* Retirada de vehículos: Para retirar los vehículos será necesaria la entrada efectiva de la transferencia en nuestra cuenta:
+  - Banco: BBVA
+  - SWIFT: BBVAESMMXXX
+  - IBAN: ES4501820055860208001052
+* Instrucciones de Transferencia: Por favor, siempre que nos hagas una transferencia bancaria, escribe la matrícula del vehículo en el concepto, sin espacios ni guiones. De esa forma nuestro sistema encontrará tu vehículo automáticamente. Si además de la matrícula, añades tu CIF/NIF y el N° de factura tal como aparece el ella, agilizarás el proceso todavía más y podrás obtener antes tus vehículos.
+  - Ejemplo incorrecto: 2345 BCA
+  - Ejemplo correcto: 2345BCA✔✔. Así es como debes escribirlo: todo junto, sin espacios ni guiones.
+* Soporte: En caso de duda, escríbenos a info.es@bca.com o llámanos al 949 263 000.
+
+--------------------------------------------------
+
+Condiciones y Notas Aclaratorias
+
+* *Todos los precios mostrados en las comisiones no incluyen IVA.
+* ** El porcentaje de la tasas de adquisición se aplicarà al precio final de adjudicación.
+* *** Esta tasa se cobrará en el caso de comprador para los vehículos electricos adquiridos que se les haya realizado el test de salud de batería Aviloo y en el caso de vendedor para los vehiculos retirados sin venderse con el test de salud de batería Aviloo realizado.
+* Tarifas aplicadas para vehiculos comprados a partir del 1 de junio, este inclusive.
